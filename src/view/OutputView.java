@@ -127,7 +127,8 @@ public class OutputView {
     }
 
     public void printPaymentResult(int payAmount, ChangeAndPoint changeAndPoint) {
-        System.out.println("%n지불한 금액 : %s".formatted(formatPrice(payAmount)));
+        System.out.println("\n[✅] 결제가 완료되었습니다! 전투 종료!");
+        System.out.println("지불한 금액 : %s".formatted(formatPrice(payAmount)));
         System.out.println("잔돈 : %s".formatted(formatPrice(changeAndPoint.change())));
         System.out.println("적립 포인트 : %s".formatted(formatPrice(changeAndPoint.rewardPoint())));
     }

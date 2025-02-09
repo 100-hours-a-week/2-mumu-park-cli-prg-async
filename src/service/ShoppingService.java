@@ -9,6 +9,9 @@ import validator.CouponValidator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ShoppingService {
 
@@ -55,11 +58,24 @@ public class ShoppingService {
         return user.generateDiscountInfo(LocalDateTime.now());
     }
 
-    public ChangeAndPoint pay(PaymentInfo paymentInfo) {
-        ChangeAndPoint changeAndPoint = shoppingMall.paymentProgress(LocalDateTime.now(), paymentInfo);
-        user.payProcess(paymentInfo, changeAndPoint.rewardPoint());
+    public CompletableFuture<ChangeAndPoint> pay(PaymentInfo paymentInfo) {
+        AtomicBoolean paymentCompleted = new AtomicBoolean(false);
+        GameService gameService = new GameService(paymentCompleted);
 
-        return changeAndPoint;
+        CompletableFuture<Void> battleFuture = CompletableFuture.runAsync(gameService::startBattle);
+        CompletableFuture<ChangeAndPoint> futurePayment = shoppingMall.paymentProgress(LocalDateTime.now(), paymentInfo);
+
+        return futurePayment.thenApply(changeAndPoint -> {
+            paymentCompleted.set(true); // 결제 완료 후 전투 종료 신호
+            user.payProcess(paymentInfo, changeAndPoint.rewardPoint());
+            return changeAndPoint;
+        }).whenComplete((result, ex) -> {
+            try {
+                battleFuture.get(); // 전투가 완료될 때까지 대기
+            } catch (InterruptedException | ExecutionException e) {
+                System.out.println("[⚠] 전투 종료 대기 중 오류 발생!");
+            }
+        });
     }
 
     public List<OrderHistory> getUserOrderHistory() {

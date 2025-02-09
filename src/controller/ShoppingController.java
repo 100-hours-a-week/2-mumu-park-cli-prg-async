@@ -11,6 +11,8 @@ import view.OutputView;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class ShoppingController {
     private static final String YES = "y";
@@ -170,12 +172,25 @@ public class ShoppingController {
         outputView.printFinalPrice(finalPrice);
 
         int payAmount = readPayAmount(finalPrice);
-        outputView.printPaymentResult(
-                payAmount,
-                shoppingService.pay(createPaymentInfo(cartProducts, userDiscountInfo, finalPrice, payAmount))
+
+        CompletableFuture<ChangeAndPoint> futurePayment = shoppingService.pay(
+                createPaymentInfo(cartProducts, userDiscountInfo, finalPrice, payAmount)
         );
 
-        handlePostPayment();
+        futurePayment.thenAccept(changeAndPoint -> {
+            outputView.printPaymentResult(payAmount, changeAndPoint);
+            try {
+                handlePostPayment();
+            } catch (IOException e) {
+                outputView.handleExceptionMessage(new ExceptionDto(e.getMessage()));
+            }
+        });
+
+        try {
+            futurePayment.get();  // 메인 스레드가 종료되지 않도록 결제 완료까지 대기
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("결제 과정에서 문제가 발생했습니다.", e);
+        }
     }
 
     private int readPayAmount(int finalPrice) throws IOException {

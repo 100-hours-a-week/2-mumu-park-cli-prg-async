@@ -1,7 +1,5 @@
 package model.shoppingmall;
 
-import constant.exception.ErrorMessage;
-import constant.exception.custom.OverPurchaseQuantityException;
 import dto.*;
 import model.shoppingmall.cart.CartManagement;
 import model.shoppingmall.history.HistoryManagement;
@@ -13,6 +11,7 @@ import validator.CartValidator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class ShoppingMall {
     private final ProductManagement productManagement;
@@ -52,12 +51,19 @@ public class ShoppingMall {
         productManagement.addProductQuantity(deleteInfo.name(), deleteInfo.purchaseOrDeleteQuantity());
     }
 
-    public ChangeAndPoint paymentProgress(LocalDateTime now, PaymentInfo paymentInfo) {
-        ChangeAndPoint changeAndPoint = paymentManagement.calculateChangeAndRewardPoint(paymentInfo);
-        historyManagement.saveOrder(now, paymentInfo, changeAndPoint);
-        cartManagement.deleteAllCartProduct();
-
-        return changeAndPoint;
+    public CompletableFuture<ChangeAndPoint> paymentProgress(LocalDateTime now, PaymentInfo paymentInfo) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(5000);
+                ChangeAndPoint changeAndPoint = paymentManagement.calculateChangeAndRewardPoint(paymentInfo);
+                historyManagement.saveOrder(now, paymentInfo, changeAndPoint);
+                cartManagement.deleteAllCartProduct();
+                return changeAndPoint;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+        });
     }
 
     public List<OrderHistory> getOrderHistory() {
