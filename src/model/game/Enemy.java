@@ -1,6 +1,8 @@
 package model.game;
 
+import dto.GameProgressInfo;
 import service.GameService;
+import view.OutputView;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -10,11 +12,13 @@ public class Enemy extends Fighter {
     private static final int ENEMY_HP = 50;
     private final ReentrantLock lock;
     private final Condition turnCondition;
+    private final OutputView outputView;
 
     public Enemy(AtomicBoolean paymentCompleted, ReentrantLock lock, Condition turnCondition) {
         super(ENEMY_HP, paymentCompleted);
         this.lock = lock;
         this.turnCondition = turnCondition;
+        this.outputView = OutputView.getInstance();
     }
 
     @Override
@@ -42,6 +46,8 @@ public class Enemy extends Fighter {
         int damage = generateRandomDamage();
         GameService.player.takeDamage(damage);
 
-        System.out.println("[⚠️] 적이 공격! 데미지 : " + damage +", 적 체력: " + GameService.player.getHp());
+        outputView.printGameProgress(new GameProgressInfo(
+                false, damage, GameService.player.getHp()
+        ));
     }
 }

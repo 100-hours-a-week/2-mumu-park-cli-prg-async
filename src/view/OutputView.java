@@ -1,6 +1,7 @@
 package view;
 
 import dto.*;
+import service.GameService;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,16 @@ public class OutputView {
     private static final String TOP = "TOP";
     private static final String BOTTOM = "BOTTOM";
     private static final String LINE_SEPARATOR = "-------------------------------------------------------";
+
+    private OutputView() {}
+
+    private static class OutputViewInstanceHolder {
+        private static final OutputView INSTANCE = new OutputView();
+    }
+
+    public static OutputView getInstance() {
+        return OutputViewInstanceHolder.INSTANCE;
+    }
 
     public void handleExceptionMessage(ExceptionDto exceptionDto) {
         printExceptionMessage(exceptionDto.message());
@@ -164,6 +175,18 @@ public class OutputView {
                 .collect(Collectors.joining("%s\n".formatted(LINE_SEPARATOR)));
         System.out.println(result);
         System.out.println("========================\n");
+    }
+
+    public void printBattleStart() {
+        System.out.println("[🎮] 결제 대기 중! 전투 시작!\n");
+    }
+
+    public void printGameProgress(GameProgressInfo gameProgressInfo) {
+        if (gameProgressInfo.isPlayer()) {
+            System.out.println("[⚔️] 내가 공격! 데미지 : %d, 적 체력 : %d 남음".formatted(gameProgressInfo.damage(), gameProgressInfo.hp()));
+            return;
+        }
+        System.out.println("[⚠️] 적이 공격! 데미지 : %d, 내 체력 : %d 남음".formatted(gameProgressInfo.damage(), gameProgressInfo.hp()));
     }
 }
 

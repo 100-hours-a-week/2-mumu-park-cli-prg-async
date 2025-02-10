@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class main {
     public static void main(String[] args) throws IOException {
-        OutputView outputView = new OutputView();
+        OutputView outputView = OutputView.getInstance();
 
         ShoppingController controller = new ShoppingController(
                 new InputView(outputView),

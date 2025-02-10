@@ -2,6 +2,7 @@ package constant.exception;
 
 public enum ErrorMessage {
     COMMON_EXCEPTION("[ERROR] "),
+    INTERRUPTED("\"[⚠] 전투 중단 감지!\""),
     VALIDATOR_CLASS("Validator Class"),
     UTILITY_CLASS("Utility Class"),
     UNKNOWN_TYPE("존재하지 않는 타입입니다."),

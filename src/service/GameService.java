@@ -1,7 +1,10 @@
 package service;
 
+import constant.exception.ErrorMessage;
+import dto.ExceptionDto;
 import model.game.Enemy;
 import model.game.Player;
+import view.OutputView;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -9,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class GameService {
     private final AtomicBoolean paymentCompleted;
+    private final OutputView outputView;
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition turnCondition = lock.newCondition();
     public static Player player;
@@ -16,12 +20,13 @@ public class GameService {
 
     public GameService(AtomicBoolean paymentCompleted) {
         this.paymentCompleted = paymentCompleted;
+        this.outputView = OutputView.getInstance();
         player = new Player(paymentCompleted, lock, turnCondition);
         enemy = new Enemy(paymentCompleted, lock, turnCondition);
     }
 
     public void startBattle() {
-        System.out.println("[🎮] 결제 대기 중! 전투 시작!\n");
+        outputView.printBattleStart();
 
         Thread playerThread = new Thread(player);
         Thread enemyThread = new Thread(enemy);
@@ -40,7 +45,9 @@ public class GameService {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                System.out.println("[⚠] 전투 중단 감지!");
+                outputView.handleExceptionMessage(new ExceptionDto(
+                        ErrorMessage.INTERRUPTED.getMessage()
+                ));
                 break;
             }
         }
