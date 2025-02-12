@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class Fighter implements Runnable{
     protected final AtomicInteger hp;
     protected final AtomicBoolean paymentCompleted;
+    private static final int MIN_HP = 0;
 
     protected Fighter(int unitHp, AtomicBoolean paymentCompleted) {
         this.hp = new AtomicInteger(unitHp);
@@ -25,7 +26,7 @@ public abstract class Fighter implements Runnable{
     }
 
     public int getHp() {
-        return hp.get();
+        return Math.max(hp.get(), MIN_HP);
     }
 
     protected int generateRandomDamage() {

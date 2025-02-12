@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class GameService {
     private final AtomicBoolean paymentCompleted;
-    private final OutputView outputView;
+    private final GameEventPublisher gameEventPublisher;
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition turnCondition = lock.newCondition();
     public static Player player;
@@ -20,13 +20,13 @@ public class GameService {
 
     public GameService(AtomicBoolean paymentCompleted) {
         this.paymentCompleted = paymentCompleted;
-        this.outputView = OutputView.getInstance();
-        player = new Player(paymentCompleted, lock, turnCondition);
-        enemy = new Enemy(paymentCompleted, lock, turnCondition);
+        this.gameEventPublisher = new GameEventPublisher();
+        player = new Player(paymentCompleted, lock, turnCondition, gameEventPublisher);
+        enemy = new Enemy(paymentCompleted, lock, turnCondition, gameEventPublisher);
     }
 
     public void startBattle() {
-        outputView.printBattleStart();
+        gameEventPublisher.publishGameStart();
 
         Thread playerThread = new Thread(player);
         Thread enemyThread = new Thread(enemy);
@@ -45,9 +45,7 @@ public class GameService {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
-                outputView.handleExceptionMessage(new ExceptionDto(
-                        ErrorMessage.INTERRUPTED.getMessage()
-                ));
+                gameEventPublisher.publishErrorEvent(ErrorMessage.INTERRUPTED.getMessage());
                 break;
             }
         }

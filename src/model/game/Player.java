@@ -1,8 +1,8 @@
 package model.game;
 
 import dto.GameProgressInfo;
+import service.GameEventPublisher;
 import service.GameService;
-import view.OutputView;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -12,13 +12,13 @@ public class Player extends Fighter {
     private static final int PLAYER_HP = 100;
     private final ReentrantLock lock;
     private final Condition turnCondition;
-    private final OutputView outputView;
+    private final GameEventPublisher gameEventPublisher;
 
-    public Player(AtomicBoolean paymentCompleted, ReentrantLock lock, Condition turnCondition) {
+    public Player(AtomicBoolean paymentCompleted, ReentrantLock lock, Condition turnCondition, GameEventPublisher gameEventPublisher) {
         super(PLAYER_HP, paymentCompleted);
         this.lock = lock;
         this.turnCondition = turnCondition;
-        this.outputView = OutputView.getInstance();
+        this.gameEventPublisher = gameEventPublisher;
     }
 
     @Override
@@ -55,8 +55,7 @@ public class Player extends Fighter {
         int damage = generateRandomDamage();
         GameService.enemy.takeDamage(damage);
 
-        outputView.printGameProgress(new GameProgressInfo(
-                true, damage, GameService.enemy.getHp()
-        ));
+        gameEventPublisher.publishAttackEvent(new GameProgressInfo(
+                true, damage, GameService.enemy.getHp()));
     }
 }
